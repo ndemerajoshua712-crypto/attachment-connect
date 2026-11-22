@@ -112,9 +112,9 @@ async function uploadCompanyLogo(req, res) {
   let savedPath;
   try {
     if (!req.file) return res.status(400).json({success:false,message:"Select a logo image first."});
-    const b=req.file.buffer;const valid={"image/jpeg":b[0]===0xff&&b[1]===0xd8&&b[2]===0xff,"image/png":b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),"image/webp":b.toString("ascii",0,4)==="RIFF"&&b.toString("ascii",8,12)==="WEBP"};
-    if(!valid[req.file.mimetype])return res.status(400).json({success:false,message:"The selected file is not a valid image."});
-    const ext={"image/jpeg":".jpg","image/png":".png","image/webp":".webp"}[req.file.mimetype];const name=`${randomUUID()}${ext}`;const dir=path.join(__dirname,"../../uploads/company-logos");await fs.mkdir(dir,{recursive:true});savedPath=path.join(dir,name);await fs.writeFile(savedPath,b,{flag:"wx"});
+    const b=req.file.buffer;const detectedMime=b.length>=3&&b[0]===0xff&&b[1]===0xd8&&b[2]===0xff?"image/jpeg":b.length>=8&&b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))?"image/png":b.length>=12&&b.toString("ascii",0,4)==="RIFF"&&b.toString("ascii",8,12)==="WEBP"?"image/webp":null;
+    if(!detectedMime)return res.status(400).json({success:false,message:"This file is not a valid JPG, PNG, or WebP image. Please choose another logo."});
+    const ext={"image/jpeg":".jpg","image/png":".png","image/webp":".webp"}[detectedMime];const name=`${randomUUID()}${ext}`;const dir=path.join(__dirname,"../../uploads/company-logos");await fs.mkdir(dir,{recursive:true});savedPath=path.join(dir,name);await fs.writeFile(savedPath,b,{flag:"wx"});
     const company=await prisma.companyProfile.update({where:{userId:req.user.id},data:{logoStorageKey:`company-logos/${name}`},select:{id:true,logoStorageKey:true}});return res.json({success:true,company});
   }catch(error){if(savedPath)await fs.unlink(savedPath).catch(()=>{});console.error("Company logo upload error:",error);return res.status(500).json({success:false,message:"Could not upload company logo."});}
 }

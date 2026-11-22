@@ -19,7 +19,7 @@ const {
 } = require("../middleware/auth.middleware");
 
 const router = express.Router();
-const { uploadProfilePhoto } = require("../middleware/upload.middleware");
+const { uploadCompanyLogo: parseCompanyLogo } = require("../middleware/upload.middleware");
 const { uploadCompanyLogo } = require("../controllers/company.controller");
 
 // Protect all company routes
@@ -28,7 +28,7 @@ router.use(requireAuth, allowRoles("COMPANY"));
 // COMPANY PROFILE
 router.get("/profile", getCompanyProfile);
 router.put("/profile", updateCompanyProfile);
-router.post("/logo", uploadProfilePhoto, uploadCompanyLogo);
+router.post("/logo", parseCompanyLogo, uploadCompanyLogo);
 
 // COMPANY OPPORTUNITIES
 router.post("/opportunities", createOpportunity);

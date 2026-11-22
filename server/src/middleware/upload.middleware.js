@@ -51,7 +51,23 @@ const cvUpload = multer({
   }),
 });
 
+// Logo content is validated from its file signature in the controller. Some
+// valid image files are reported by browsers with a generic or mismatched MIME
+// type, so accept only known image extensions here and verify the bytes later.
+const companyLogoUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, callback) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    if (![".jpg", ".jpeg", ".jfif", ".png", ".webp"].includes(extension)) {
+      return callback(new Error("Choose a JPG, PNG, or WebP image for your company logo."));
+    }
+    return callback(null, true);
+  },
+});
+
 module.exports = {
   uploadProfilePhoto: profilePhotoUpload.single("photo"),
+  uploadCompanyLogo: companyLogoUpload.single("photo"),
   uploadCV: cvUpload.single("cv"),
 };

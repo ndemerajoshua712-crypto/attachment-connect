@@ -6,6 +6,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
+const multer = require("multer");
 
 const app = express();
 const authRoutes = require("./routes/auth.routes");
@@ -56,6 +57,19 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "Attachment Connect API is running!",
   });
+});
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    const message = error.code === "LIMIT_FILE_SIZE"
+      ? "The logo must be 5 MB or smaller."
+      : "Upload one JPG, PNG, or WebP logo at a time.";
+    return res.status(400).json({ success: false, message });
+  }
+  if (error.message?.startsWith("Choose a JPG")) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+  return next(error);
 });
 
 // Start server

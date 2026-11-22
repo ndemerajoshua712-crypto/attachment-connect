@@ -13,7 +13,10 @@ export async function apiRequest(endpoint, options = {}) {
     },
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get("content-type") || "";
+  const data = contentType.includes("application/json")
+    ? await response.json()
+    : { message: response.ok ? "Request completed." : "The server could not process this request." };
 
   if (!response.ok) {
     throw new Error(data.message || "Something went wrong.");
