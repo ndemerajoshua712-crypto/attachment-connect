@@ -1,0 +1,10 @@
+{
+  "name": "attachment-connect",
+  "private": true,
+  "workspaces": [
+    "client"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace client"
+  }
+}
