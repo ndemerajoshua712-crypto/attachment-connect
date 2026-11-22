@@ -1,0 +1,219 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// USER ROLES
+enum UserRole {
+  STUDENT
+  COMPANY
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CVVisibility {
+  APPLICATIONS_ONLY
+  VERIFIED_COMPANIES
+}
+
+enum OpportunityStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  SHORTLISTED
+  REJECTED
+  ACCEPTED
+  WITHDRAWN
+}
+
+// 1. USERS
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  studentProfile StudentProfile?
+  companyProfile CompanyProfile?
+
+  notifications Notification[]
+  auditLogs     AuditLog[] @relation("AuditActor") 
+  sessions Session[]
+}
+
+// 2. STUDENT PROFILES
+model StudentProfile {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @db.Uuid
+
+  firstName   String
+  lastName    String
+  phone       String?
+  university  String
+  programme   String
+  studyYear   Int
+  city        String?
+  bio         String?
+  profilePhoto String?
+  skills      String[] @default([])
+
+  cvVisibility CVVisibility @default(APPLICATIONS_ONLY)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents    Document[]
+  applications Application[]
+}
+
+// 3. COMPANY PROFILES
+model CompanyProfile {
+  id                 String @id @default(uuid()) @db.Uuid
+  userId             String @unique @db.Uuid
+
+  companyName        String
+  registrationNumber String? @unique
+  industry           String
+  description        String? @db.Text
+  city               String
+  address            String?
+  logoStorageKey     String?
+
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunities Opportunity[]
+}
+
+// 4. ATTACHMENT OPPORTUNITIES
+model Opportunity {
+  id                 String @id @default(uuid()) @db.Uuid
+  companyId          String @db.Uuid
+
+  title              String
+  description        String @db.Text
+  requirements       String[] @default([])
+  fieldOfStudy       String?
+  locationCity       String
+  durationMonths     Int?
+  positionsAvailable Int @default(1)
+
+  applicationDeadline DateTime
+  startDate           DateTime?
+
+  status             OpportunityStatus @default(DRAFT)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  company      CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([status, applicationDeadline])
+  @@index([companyId])
+}
+
+// 5. APPLICATIONS
+model Application {
+  id             String @id @default(uuid()) @db.Uuid
+  studentId      String @db.Uuid
+  opportunityId  String @db.Uuid
+  cvDocumentId   String? @db.Uuid
+
+  coverLetter    String? @db.Text
+  status         ApplicationStatus @default(SUBMITTED)
+
+  submittedAt    DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  cvDocument    Document? @relation("ApplicationCV", fields: [cvDocumentId], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, opportunityId])
+  @@index([opportunityId, status])
+}
+
+// 6. DOCUMENTS
+model Document {
+  id           String @id @default(uuid()) @db.Uuid
+  studentId    String @db.Uuid
+
+  originalName String
+  storageKey   String @unique
+  mimeType     String
+  sizeBytes    Int
+
+  createdAt    DateTime @default(now())
+
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  applications Application[] @relation("ApplicationCV")
+
+  @@index([studentId])
+}
+
+// 7. NOTIFICATIONS
+model Notification {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+
+  title     String
+  message   String @db.Text
+  readAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+// 8. AUDIT LOGS
+model AuditLog {
+  id          String @id @default(uuid()) @db.Uuid
+  actorUserId String? @db.Uuid
+
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+
+  createdAt   DateTime @default(now())
+
+  actorUser   User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+}
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}

@@ -1,0 +1,2 @@
+ALTER TABLE "User" ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "CompanyProfile" ADD COLUMN "logoStorageKey" TEXT;
