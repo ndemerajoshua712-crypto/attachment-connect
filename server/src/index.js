@@ -20,8 +20,8 @@ const path = require("node:path");
 app.use(helmet());
 
 // Allow requests from our React frontend
-const configuredClientOrigin = process.env.CLIENT_URL || "http://localhost:5173";
-const allowedClientOrigins = new Set([configuredClientOrigin, "http://localhost:5173", "http://127.0.0.1:5173"]);
+const configuredClientOrigins = (process.env.CLIENT_URL || "http://localhost:5173").split(",").map(origin => origin.trim()).filter(Boolean);
+const allowedClientOrigins = new Set([...configuredClientOrigins, "http://localhost:5173", "http://127.0.0.1:5173"]);
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedClientOrigins.has(origin)) return callback(null, true);
