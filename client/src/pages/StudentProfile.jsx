@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { UserRound, Save, RefreshCw } from "lucide-react";
-import { apiRequest } from "../api";
+import { apiRequest, apiAssetUrl } from "../api";
 
 const emptyProfile = {
   firstName: "",
@@ -149,7 +149,7 @@ export default function StudentProfile() {
       </section>
 
       <section className="content-card profile-editor">
-        <form className="photo-row" onSubmit={uploadPhoto}><img src={photo ? `http://localhost:5000/uploads/${photo}` : ""} alt="" onError={e=>{e.currentTarget.style.display="none"}}/><div><strong>Profile photo</strong><p>JPG, PNG or WebP · up to 5 MB</p></div><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPhotoFile(e.target.files?.[0]||null)}/><button className="profile-refresh" disabled={!photoFile}>Upload photo</button></form>
+        <form className="photo-row" onSubmit={uploadPhoto}><img src={apiAssetUrl(photo)} alt="" onError={e=>{e.currentTarget.style.display="none"}}/><div><strong>Profile photo</strong><p>JPG, PNG or WebP · up to 5 MB</p></div><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPhotoFile(e.target.files?.[0]||null)}/><button className="profile-refresh" disabled={!photoFile}>Upload photo</button></form>
         <div className="card-heading">
           <div>
             <h2>

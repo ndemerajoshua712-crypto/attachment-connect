@@ -5,6 +5,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://attachment-connect-api-c57j.onrender.com/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://attachment-connect-api-c57j.onrender.com/uploads/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

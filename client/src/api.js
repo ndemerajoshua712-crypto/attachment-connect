@@ -1,5 +1,16 @@
 
-const API_URL = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`;
+export const API_URL = (import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`).replace(/\/+$/, "");
+
+export function apiAssetUrl(storageKey) {
+  if (!storageKey) return undefined;
+  if (/^https?:\/\//i.test(storageKey)) return storageKey;
+
+  const apiOrigin = /^https?:\/\//i.test(API_URL)
+    ? API_URL.replace(/\/api\/?$/, "")
+    : "";
+  const path = storageKey.split("/").map(encodeURIComponent).join("/");
+  return `${apiOrigin}/uploads/${path}`;
+}
 
 export async function apiRequest(endpoint, options = {}) {
   const response = await fetch(`${API_URL}${endpoint}`, {

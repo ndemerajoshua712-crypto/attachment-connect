@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { apiRequest } from "../api";
+import { apiRequest, apiAssetUrl } from "../api";
 
 const portalConfig = {
   STUDENT: {
@@ -191,7 +191,7 @@ export default function DashboardLayout({ role }) {
               <Bell size={20} />
               {notifications.some(n=>!n.readAt)&&<span className="notification-dot"/>}
             </button>
-            <div className="topbar-account"><img src={photo?`http://localhost:5000/uploads/${photo}`:undefined} alt="" onError={e=>e.currentTarget.style.display="none"}/><span>{user?.email?.split("@")[0]||"Account"}</span></div>
+            <div className="topbar-account"><img src={apiAssetUrl(photo)} alt="" onError={e=>e.currentTarget.style.display="none"}/><span>{user?.email?.split("@")[0]||"Account"}</span></div>
             {showNotifications&&<div className="notification-panel"><strong>Notifications</strong>{notifications.length?notifications.map(n=><button key={n.id} className={n.readAt?"read":"unread"} onClick={async()=>{if(!n.readAt){await apiRequest(`/notifications/${n.id}/read`,{method:"PATCH"});setNotifications(items=>items.map(x=>x.id===n.id?{...x,readAt:new Date().toISOString()}:x));}}}><b>{n.title}</b><span>{n.message}</span><small>{new Date(n.createdAt).toLocaleDateString()}</small></button>):<p>No notifications yet.</p>}</div>}
           </div>
         </header>

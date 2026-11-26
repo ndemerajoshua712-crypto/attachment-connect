@@ -7,9 +7,7 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import { apiRequest } from "../api";
-
-const API_URL = "http://localhost:5000/api";
+import { apiRequest, API_URL } from "../api";
 
 function formatSize(bytes) {
   if (!bytes) return "0 KB";
