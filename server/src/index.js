@@ -9,6 +9,7 @@ const rateLimit = require("express-rate-limit");
 const multer = require("multer");
 
 const app = express();
+const prisma = require("./db");
 const authRoutes = require("./routes/auth.routes");
 const studentRoutes = require("./routes/student.routes");
 const companyRoutes = require("./routes/company.routes");
@@ -72,9 +73,28 @@ app.use((error, req, res, next) => {
   return next(error);
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
+// Optional one-time production bootstrap. Remove these Render variables after
+// the account is created; no password is stored in the repository.
+async function startServer() {
+  const adminEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
+  const passwordHash = process.env.BOOTSTRAP_ADMIN_PASSWORD_HASH;
 
-app.listen(PORT, () => {
-  console.log(`Attachment Connect API running on port ${PORT}`);
+  if (adminEmail && passwordHash) {
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: { role: "ADMIN", isActive: true, passwordHash },
+      create: { email: adminEmail, role: "ADMIN", isActive: true, passwordHash },
+    });
+    console.log("Bootstrap administrator account initialized.");
+  }
+
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Attachment Connect API running on port ${PORT}`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error("API startup failed:", error.message);
+  process.exit(1);
 });
